@@ -1,4 +1,4 @@
-﻿namespace RawInputWithCS
+namespace RawInputWithCS
 {
     partial class MainWindow
     {
