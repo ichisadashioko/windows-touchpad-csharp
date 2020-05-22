@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace RawInputWithCS.Properties {
+namespace TouchpadHandwriting.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

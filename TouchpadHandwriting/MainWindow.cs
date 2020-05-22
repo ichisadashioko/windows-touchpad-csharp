@@ -8,13 +8,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace RawInputWithCS
+namespace TouchpadHandwriting
 {
     public partial class MainWindow : Form
     {
+        public TouchpadInput touchpad;
         public MainWindow()
         {
             InitializeComponent();
+            touchpad = new TouchpadInput(Handle);
         }
     }
 }

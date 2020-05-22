@@ -26,13 +26,13 @@ There is an optional HID top-level collection and it might be used for firmware 
 
 ```
 Successfully retreive number of devices: 9 devices
-Device #0's name is \\?\HID#VID_18F8&PID_0F97&MI_01&Col01#7&23146815&0&0000#{884b96c3-56ef-11d1-bc8c-00a0c91405dd}
-Device #1's name is \\?\HID#VID_18F8&PID_0F97&MI_00#7&c2d5ad&0&0000#{378de44c-56ef-11d1-bc8c-00a0c91405dd}
-Device #2's name is \\?\HID#VID_18F8&PID_0F97&MI_01&Col03#7&23146815&0&0002#{4d1e55b2-f16f-11cf-88cb-001111000030}
-Device #3's name is \\?\HID#VID_18F8&PID_0F97&MI_01&Col02#7&23146815&0&0001#{4d1e55b2-f16f-11cf-88cb-001111000030}
 Device #4's name is \\?\HID#SYNA7DB5&Col04#5&22d87139&0&0003#{4d1e55b2-f16f-11cf-88cb-001111000030}
 Device #5's name is \\?\HID#SYNA7DB5&Col03#5&22d87139&0&0002#{4d1e55b2-f16f-11cf-88cb-001111000030}
 Device #6's name is \\?\HID#SYNA7DB5&Col02#5&22d87139&0&0001#{4d1e55b2-f16f-11cf-88cb-001111000030}
-Device #7's name is \\?\ACPI#MSFT0001#4&3a5de18a&0#{884b96c3-56ef-11d1-bc8c-00a0c91405dd}
 Device #8's name is \\?\HID#SYNA7DB5&Col01#5&22d87139&0&0000#{378de44c-56ef-11d1-bc8c-00a0c91405dd}
 ```
+
+# References
+
+- https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-rawinputdevice
+- https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerrawinputdevices

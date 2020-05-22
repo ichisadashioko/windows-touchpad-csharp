@@ -1,60 +1,50 @@
+using Microsoft.Win32;
 using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace RawInputWithCS
+namespace TouchpadHandwriting
 {
-    /// <summary>
-    /// Raw input device info.
-    /// </summary>
-    enum RIDI : uint
+    public class TouchpadInput : NativeWindow
     {
-        DEVICENAME = 0x20000007,
-        DEVICEINFO = 0x2000000b,
-        PREPARSEDDATA = 0x20000005,
-    }
-
-    enum RIM : uint
-    {
-        TYPEMOUSE = 0,
-        TYPEKEYBOARD = 1,
-        TYPEHID = 2,
-    }
-
-    static class Program
-    {
-        [DllImport("user32.dll", SetLastError = true)]
-        internal static extern uint GetRawInputDeviceList(IntPtr pRawInputDeviceList, ref uint numberDevices, uint size);
-
-        /// <summary>
-        /// Retrieves information about the raw input device.
-        /// </summary>
-        /// <param name="hDevice">A handle to the raw input device. This comes from the `hDevice` member of `RAWINPUTHEADER` or from `GetRawInputDeviceList`.</param>
-        /// <param name="uiCommand">Specifies what data will be returned in `pData`.</param>
-        /// <param name="pData">A pointer to a buffer that contains the information specified by `uiCommand`. If `uiCommand` is `RIDI_DEVICEINFO`, set the `cbSize` member of `RID_DEVICE_INFO` to `sizeof(RID_DEVICE_INFO)` before calling `GetRawInputDeviceInfo`.</param>
-        /// <param name="pcbSize">The size, in bytes, of the data in `pData`.</param>
-        /// <returns>If successful, this function returns a non-negative number indicating the number of bytes copied to `pData`.
-        /// If `pData` is not large enough for the data, the function returns -1. If `pData` is `NULL`, the function returns a value of zero. In both of these cases, `pcbSize` is set to the minimum size required for the `pData` buffer.
-        /// 
-        /// Call `GetLastError` to identify any other errors.</returns>
-        [DllImport("user32.dll", SetLastError = true)]
-        internal static extern uint GetRawInputDeviceInfo(IntPtr hDevice, RIDI uiCommand, IntPtr pData, ref uint pcbSize);
-
-        /// <summary>
-        /// Contains information about a raw input device.
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        internal struct RAWINPUTDEVICELIST
+        public TouchpadInput(IntPtr hWnd)
         {
-            /// <summary>
-            /// A handle to the raw input device.
-            /// </summary>
-            public IntPtr hDevice;
+            AssignHandle(hWnd);
+            Program.RegisterWindowsPrecisionTouchpad(hWnd);
+        }
 
-            /// <summary>
-            /// The type of device. See `RIM`.
-            /// </summary>
-            public uint dwType;
+        public void ProcessRawInputMessage(Message m)
+        {
+            Console.WriteLine($"WParam: {m.WParam}");
+            Console.WriteLine($"LParam: {m.LParam}");
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            switch (m.Msg)
+            {
+                case User32.WM_INPUT:
+                    ProcessRawInputMessage(m);
+                    break;
+            }
+
+            base.WndProc(ref m);
+        }
+    }
+
+    public static class Program
+    {
+        public static RegistryKey GetRegistryKey(string name)
+        {
+            // sample name
+            // \\?\HID#VID_18F8&PID_0F97&MI_01&Col01#7&23146815&0&0000#{884b96c3-56ef-11d1-bc8c-00a0c91405dd}
+            var split = name.Substring(4).Split('#');
+
+            var classCode = split[0];
+            var subClassCode = split[1];
+            var protocolCode = split[2];
+
+            return Registry.LocalMachine.OpenSubKey($"System\\CurrentControlSet\\Enum\\{classCode}\\{subClassCode}\\{protocolCode}");
         }
 
         public static void GetListOfHIDDevices()
@@ -62,11 +52,11 @@ namespace RawInputWithCS
             var dwSize = (Marshal.SizeOf(typeof(RAWINPUTDEVICELIST)));
             uint deviceCount = 0;
 
-            if (GetRawInputDeviceList(IntPtr.Zero, ref deviceCount, (uint)dwSize) == 0)
+            if (User32.GetRawInputDeviceList(IntPtr.Zero, ref deviceCount, (uint)dwSize) == 0)
             {
                 Console.WriteLine($"Successfully retreive number of devices: {deviceCount} devices");
                 var pRawInputDeviceList = Marshal.AllocHGlobal((int)(dwSize * deviceCount));
-                GetRawInputDeviceList(pRawInputDeviceList, ref deviceCount, (uint)dwSize);
+                User32.GetRawInputDeviceList(pRawInputDeviceList, ref deviceCount, (uint)dwSize);
 
                 for (var i = 0; i < deviceCount; i++)
                 {
@@ -74,7 +64,7 @@ namespace RawInputWithCS
 
                     var rid = (RAWINPUTDEVICELIST)Marshal.PtrToStructure(new IntPtr((pRawInputDeviceList.ToInt64() + (dwSize * i))), typeof(RAWINPUTDEVICELIST));
 
-                    GetRawInputDeviceInfo(rid.hDevice, RIDI.DEVICENAME, IntPtr.Zero, ref pcbSize);
+                    User32.GetRawInputDeviceInfo(rid.hDevice, RIDI.DEVICENAME, IntPtr.Zero, ref pcbSize);
 
                     if (pcbSize <= 0)
                     {
@@ -84,7 +74,7 @@ namespace RawInputWithCS
 
                     var pData = Marshal.AllocHGlobal((int)pcbSize);
 
-                    GetRawInputDeviceInfo(rid.hDevice, RIDI.DEVICENAME, pData, ref pcbSize);
+                    User32.GetRawInputDeviceInfo(rid.hDevice, RIDI.DEVICENAME, pData, ref pcbSize);
                     var deviceName = Marshal.PtrToStringAnsi(pData);
 
                     Console.WriteLine($"Device #{i}'s name is {deviceName}");
@@ -105,6 +95,13 @@ namespace RawInputWithCS
                             break;
                     }
 
+                    var registryKey = GetRegistryKey(deviceName);
+                    var valueNames = registryKey.GetValueNames();
+                    foreach (var valueName in valueNames)
+                    {
+                        Console.WriteLine($"- {valueName}: {registryKey.GetValue(valueName)}");
+                    }
+
                     Marshal.FreeHGlobal(pData);
                 }
 
@@ -113,10 +110,32 @@ namespace RawInputWithCS
         }
 
         /// <summary>
+        /// Register for Windows Precision Touchpad HID collection.
+        /// </summary>
+        /// <param name="hWnd">A instance of System.Windows.Forms.Control.Handle</param>
+        public static void RegisterWindowsPrecisionTouchpad(IntPtr hWnd)
+        {
+            var rawInputDevices = new RAWINPUTDEVICE[1];
+            rawInputDevices[0].usUsagePage = 0x0D;
+            rawInputDevices[0].usUsage = 0x05;
+            rawInputDevices[0].dwFlags = (uint)RIDEV.INPUTSINK;
+            rawInputDevices[0].hwndTarget = hWnd;
+
+            if (User32.RegisterRawInputDevices(rawInputDevices, (uint)rawInputDevices.Length, (uint)Marshal.SizeOf(rawInputDevices[0])))
+            {
+                Console.WriteLine($"Successfully register for Windows Precision Touchpad collection!");
+            }
+            else
+            {
+                Console.WriteLine($"Failed to register for Windows Precision Touchpad collection!");
+            }
+        }
+
+        /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        public static void Main()
         {
             Console.WriteLine("Hello!");
             GetListOfHIDDevices();

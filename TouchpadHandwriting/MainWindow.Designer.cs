@@ -1,4 +1,4 @@
-namespace RawInputWithCS
+namespace TouchpadHandwriting
 {
     partial class MainWindow
     {
