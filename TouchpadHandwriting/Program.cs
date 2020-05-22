@@ -15,17 +15,28 @@ namespace TouchpadHandwriting
 
         public void ProcessRawInputMessage(Message m)
         {
-            Console.WriteLine($"WParam: {m.WParam}");
-            Console.WriteLine($"LParam: {m.LParam}");
+            //Console.WriteLine($"WParam: {m.WParam}");
+            //Console.WriteLine($"LParam: {m.LParam}");
 
-            uint dwSize = 0;
+            var dwSize = 0;
             User32.GetRawInputData(m.LParam, RID.INPUT, IntPtr.Zero, ref dwSize, Marshal.SizeOf(typeof(RAWINPUTHEADER)));
+
+            Console.WriteLine($"dwSize: {dwSize}");
+
+            if (dwSize == 0)
+            {
+                Console.WriteLine($"There is some problem with GetRawInputData. Error code: {Marshal.GetLastWin32Error()}");
+                return;
+            }
 
             RAWINPUT raw;
 
-            if (User32.GetRawInputData(m.LParam, RID.INPUT, out raw, ref dwSize, Marshal.SizeOf(typeof(RAWINPUTHEADER))) != dwSize)
+            var lastDwSize = dwSize;
+            var rawInputSize = User32.GetRawInputData(m.LParam, RID.INPUT, out raw, ref dwSize, Marshal.SizeOf(typeof(RAWINPUTHEADER)));
+            if (rawInputSize != lastDwSize)
             {
-                Console.WriteLine($"GetRawInputData does not return the correct size!");
+                Console.WriteLine($"GetRawInputData does not return the correct size! {rawInputSize} vs {lastDwSize}");
+                Console.WriteLine($"Error code: {Marshal.GetLastWin32Error()}");
                 return;
             }
 
@@ -53,7 +64,14 @@ namespace TouchpadHandwriting
             switch (m.Msg)
             {
                 case User32.WM_INPUT:
-                    ProcessRawInputMessage(m);
+                    try
+                    {
+                        ProcessRawInputMessage(m);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex);
+                    }
                     break;
             }
 

@@ -35,9 +35,9 @@ namespace TouchpadHandwriting
         /// </summary>
         /// <returns></returns>
         [DllImport(DLL_NAME, SetLastError = true)]
-        public static extern uint GetRawInputData(IntPtr hRawInput, RID uiCommand, [Out] IntPtr pData, [In, Out] ref uint pcbSize, int cbSizeHeader);
+        public static extern uint GetRawInputData(IntPtr hRawInput, RID uiCommand, [Out] IntPtr pData, [In, Out] ref int pcbSize, int cbSizeHeader);
 
         [DllImport(DLL_NAME, SetLastError = true)]
-        public static extern uint GetRawInputData(IntPtr hRawInput, RID uiCommand, [Out] out RAWINPUT pData, [In, Out] ref uint pcbSize, int cbSizeHeader);
+        public static extern uint GetRawInputData(IntPtr hRawInput, RID uiCommand, [Out] out RAWINPUT pData, [In, Out] ref int pcbSize, int cbSizeHeader);
     }
 }
