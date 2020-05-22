@@ -36,3 +36,7 @@ Device #8's name is \\?\HID#SYNA7DB5&Col01#5&22d87139&0&0000#{378de44c-56ef-11d1
 
 - https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-rawinputdevice
 - https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerrawinputdevices
+
+# Notes
+
+- `ULONG` is the same as `UINT`. That's why I use `uint` for `ULONG` in C# `struct`.

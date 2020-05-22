@@ -6,9 +6,11 @@ namespace TouchpadHandwriting
 {
     public static class User32
     {
+        public const string DLL_NAME = "user32.dll";
+
         public const int WM_INPUT = 0x00FF;
 
-        [DllImport("user32.dll", SetLastError = true)]
+        [DllImport(DLL_NAME, SetLastError = true)]
         public static extern uint GetRawInputDeviceList(IntPtr pRawInputDeviceList, ref uint numberDevices, uint size);
 
         /// <summary>
@@ -22,10 +24,20 @@ namespace TouchpadHandwriting
         /// If `pData` is not large enough for the data, the function returns -1. If `pData` is `NULL`, the function returns a value of zero. In both of these cases, `pcbSize` is set to the minimum size required for the `pData` buffer.
         /// 
         /// Call `GetLastError` to identify any other errors.</returns>
-        [DllImport("user32.dll", SetLastError = true)]
+        [DllImport(DLL_NAME, SetLastError = true)]
         public static extern uint GetRawInputDeviceInfo(IntPtr hDevice, RIDI uiCommand, IntPtr pData, ref uint pcbSize);
 
-        [DllImport("user32.dll", SetLastError = true)]
+        [DllImport(DLL_NAME, SetLastError = true)]
         public static extern bool RegisterRawInputDevices(RAWINPUTDEVICE[] pRawInputDevices, uint uiNumDevices, uint cbSize);
+
+        /// <summary>
+        /// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getrawinputdata
+        /// </summary>
+        /// <returns></returns>
+        [DllImport(DLL_NAME, SetLastError = true)]
+        public static extern uint GetRawInputData(IntPtr hRawInput, RID uiCommand, [Out] IntPtr pData, [In, Out] ref uint pcbSize, int cbSizeHeader);
+
+        [DllImport(DLL_NAME, SetLastError = true)]
+        public static extern uint GetRawInputData(IntPtr hRawInput, RID uiCommand, [Out] out RAWINPUT pData, [In, Out] ref uint pcbSize, int cbSizeHeader);
     }
 }

@@ -17,6 +17,35 @@ namespace TouchpadHandwriting
         {
             Console.WriteLine($"WParam: {m.WParam}");
             Console.WriteLine($"LParam: {m.LParam}");
+
+            uint dwSize = 0;
+            User32.GetRawInputData(m.LParam, RID.INPUT, IntPtr.Zero, ref dwSize, Marshal.SizeOf(typeof(RAWINPUTHEADER)));
+
+            RAWINPUT raw;
+
+            if (User32.GetRawInputData(m.LParam, RID.INPUT, out raw, ref dwSize, Marshal.SizeOf(typeof(RAWINPUTHEADER))) != dwSize)
+            {
+                Console.WriteLine($"GetRawInputData does not return the correct size!");
+                return;
+            }
+
+            switch (raw.header.dwType)
+            {
+                case (uint)RIM.TYPEMOUSE:
+                    Console.WriteLine("Received expected mouse input!");
+                    return;
+                case (uint)RIM.TYPEKEYBOARD:
+                    Console.WriteLine("Received expected keyboard input!");
+                    return;
+                case (uint)RIM.TYPEHID:
+                    break;
+                default:
+                    Console.WriteLine($"Unknown RAWINPUT header {raw.header.dwType}!");
+                    Console.WriteLine($"Last error code: {Marshal.GetLastWin32Error()}");
+                    return;
+            }
+
+            Console.WriteLine(raw.data.hid);
         }
 
         protected override void WndProc(ref Message m)
@@ -128,6 +157,8 @@ namespace TouchpadHandwriting
             else
             {
                 Console.WriteLine($"Failed to register for Windows Precision Touchpad collection!");
+                int lastErrorCode = Marshal.GetLastWin32Error();
+                Console.WriteLine($"Error code: {lastErrorCode}");
             }
         }
 
