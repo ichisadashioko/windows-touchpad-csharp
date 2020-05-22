@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace RawInputWithCS
@@ -15,6 +12,13 @@ namespace RawInputWithCS
         DEVICENAME = 0x20000007,
         DEVICEINFO = 0x2000000b,
         PREPARSEDDATA = 0x20000005,
+    }
+
+    enum RIM : uint
+    {
+        TYPEMOUSE = 0,
+        TYPEKEYBOARD = 1,
+        TYPEHID = 2,
     }
 
     static class Program
@@ -36,10 +40,20 @@ namespace RawInputWithCS
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern uint GetRawInputDeviceInfo(IntPtr hDevice, RIDI uiCommand, IntPtr pData, ref uint pcbSize);
 
+        /// <summary>
+        /// Contains information about a raw input device.
+        /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         internal struct RAWINPUTDEVICELIST
         {
+            /// <summary>
+            /// A handle to the raw input device.
+            /// </summary>
             public IntPtr hDevice;
+
+            /// <summary>
+            /// The type of device. See `RIM`.
+            /// </summary>
             public uint dwType;
         }
 
@@ -75,6 +89,21 @@ namespace RawInputWithCS
 
                     Console.WriteLine($"Device #{i}'s name is {deviceName}");
 
+                    switch (rid.dwType)
+                    {
+                        case (uint)RIM.TYPEMOUSE:
+                            Console.WriteLine($"Device #{i} is a mouse!");
+                            break;
+                        case (uint)RIM.TYPEKEYBOARD:
+                            Console.WriteLine($"Device #{i} is a keyboard!");
+                            break;
+                        case (uint)RIM.TYPEHID:
+                            Console.WriteLine($"Device #{i} is a HID device!");
+                            break;
+                        default:
+                            Console.WriteLine($"Device #{i} has unknown device type {rid.dwType}!");
+                            break;
+                    }
 
                     Marshal.FreeHGlobal(pData);
                 }
